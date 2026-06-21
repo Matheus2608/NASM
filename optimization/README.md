@@ -10,11 +10,15 @@ Demonstração prática das flags de otimização de saltos do NASM usando códi
 
 | Arquivo     | Descrição                                                              |
 |-------------|-------------------------------------------------------------------------|
-| `soma.asm`  | Idêntico ao `soma.asm` da raiz — programa base sem funções do Paul Carter |
+| `soma.asm`  | Idêntico ao `soma.asm` da raiz — programa base sem funções do Paul Carter |![alt text](image.png)
 
 Diferente das flags de warning, **as flags `-O` não exigem nenhuma mudança no código-fonte**. O efeito delas é inteiramente sobre como o NASM decide o tamanho de codificação de instruções de salto (`jmp`/`jcc`) no `.o` final. Por isso há um único `.asm`; o que muda são os comandos de montagem.
 
 Texto oficial do `nasm -h`:
+
+```bash
+nasm -h | grep -A4 "Oflags"
+```
 
 ```
 -Oflags...    optimize opcodes, immediates and branch offsets
@@ -37,6 +41,12 @@ nasm -f elf32 soma.asm -Ov -o soma_v.o      # combinar com qualquer -O acima
 
 ## Tamanho da seção `.text` gerada
 
+```bash
+objdump -h soma_O0.o | grep .text
+objdump -h soma_O1.o | grep .text
+objdump -h soma_Ox.o | grep .text
+```
+
 | Flag             | `.text` (bytes) | Tamanho do `.o` |
 |------------------|-----------------|------------------|
 | `-O0`            | 387             | 1760 bytes       |
@@ -48,6 +58,11 @@ nasm -f elf32 soma.asm -Ov -o soma_v.o      # combinar com qualquer -O acima
 ### O resultado contraintuitivo
 
 Seria de esperar que mais "otimização" (`-O1`) gerasse código igual ou menor que nenhuma otimização (`-O0`). **Não é o que acontece neste programa**: `-O1` gera 12 bytes *mais* que `-O0`. Comparando o disassembly (`objdump -d -M intel`) lado a lado:
+
+```bash
+objdump -d -M intel soma_O0.o | grep -E "jbe|je|jne|jmp"
+objdump -d -M intel soma_O1.o | grep -E "jbe|je|jne|jmp"
+```
 
 ```
                           -O0                          -O1
