@@ -1,0 +1,10 @@
+Comando executado: nasm -f obj soma.asm -o soma_dos.obj
+
+Validação: file soma_dos.obj
+Saída: soma_dos.obj: 8086 relocatable (Microsoft)
+
+Explicação Técnica: 
+O parâmetro -f obj converte a estrutura do arquivo gerado para o formato 
+legado OMF (Object Module Format). A identificação "8086 relocatable" comprova que 
+o montador adaptou a tabela de símbolos e os metadados do código para serem compatíveis 
+com ligadores de 16 ou 32 bits muito antigos, utilizados historicamente no MS-DOS.

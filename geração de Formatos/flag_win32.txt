@@ -1,0 +1,11 @@
+Comando executado: nasm -f win32 soma.asm -o soma.obj
+
+Validação: file soma.obj
+Saída: soma.obj: Intel 80386 COFF object file, not stripped
+
+Explicação Técnica: 
+A flag -f win32 demonstra a capacidade de cross-compilation do NASM, 
+empacotando o código de máquina no formato COFF (Common Object File Format), 
+padrão lido pelos ligadores do ambiente Windows. A montagem é concluída com sucesso, 
+porém o executável final não operaria nativamente na Microsoft, pois as chamadas 
+de sistema (syscalls) implementadas no código são exclusivas da arquitetura Linux.

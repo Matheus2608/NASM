@@ -1,0 +1,11 @@
+Comando executado: nasm -f elf32 soma.asm -o soma.o
+
+Validação: file soma.o
+Saída: soma.o: ELF 32-bit LSB relocatable, Intel 80386
+
+Explicação Técnica: 
+A flag -f elf32 instrui o montador NASM a gerar um arquivo objeto no formato nativo de 
+sistemas Linux (Executable and Linkable Format). 
+Como o código fonte "soma.asm" utiliza interrupções de kernel do Linux (int 0x80) 
+para entrada e saída, este é o formato estrutural adequado e necessário para prosseguir 
+para a fase de ligação (linking) e obter um executável funcional no ambiente.

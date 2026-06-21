@@ -1,0 +1,11 @@
+Comando executado: nasm -f bin soma.asm -o soma.bin
+
+Validação: file soma.bin
+Saída: soma.bin: data
+
+Explicação Técnica: 
+A flag -f bin instrui o montador a não utilizar nenhum encapsulamento de sistema operacional. 
+A saída "data" na validação comprova que todos os cabeçalhos e metadados estruturais 
+foram removidos. O arquivo gerado contém exclusivamente os bytes brutos (opcodes) das 
+instruções de máquina, formato essencial para gravação direta em sistemas embarcados e 
+desenvolvimento de bootloaders.
