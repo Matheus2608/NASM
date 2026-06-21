@@ -4,16 +4,21 @@
 ; Tolerância zero: qualquer aviso vira erro fatal e interrompe a compilação.
 ; O arquivo .o NÃO é gerado enquanto houver avisos no código.
 ; Modificação em relação a soma.asm:
-;   - Adicionada 'unused_var db 0' (causa o aviso que se tornará erro fatal).
+;   - 'pad resb 1' dentro do .data: reserva espaço não-inicializado numa seção
+;     inicializada → dispara 'zeroing' [ON por padrão].
+;     Normalmente é apenas aviso e .o é gerado; com -w+error vira erro fatal.
 ;
 ; Como compilar — compare as duas execuções:
-;   nasm -f elf32 flag_werror.asm            <- compila, gera .o (sem flag)
-;   nasm -f elf32 flag_werror.asm -w+error   <- FALHA, não gera .o
+;   nasm -f elf32 flag_werror.asm            <- aviso, mas .o é gerado
+;   nasm -f elf32 flag_werror.asm -w+error   <- ERRO FATAL, .o NÃO é gerado
 ;
-; Saída esperada com -w+error:
-;   flag_werror.asm:X: error: symbol `unused_var' defined but not used [-w+not-used]
+; Saída esperada SEM flag:
+;   flag_werror.asm:X: warning: uninitialized space declared in non-BSS section `.data': zeroing [-w+zeroing]
 ;
-; Para corrigir: remova unused_var ou referencie-a no código.
+; Saída esperada COM -w+error:
+;   flag_werror.asm:X: error: uninitialized space declared in non-BSS section `.data': zeroing [-w+error=zeroing]
+;
+; Para corrigir: mova 'pad' para a seção .bss (onde espaço não-inicializado pertence).
 
 section .data
     prompt1    db "Enter a number (0-9): "
@@ -27,7 +32,7 @@ section .data
     outmsg3    db ", the sum of these is "
     len_o3     equ $ - outmsg3
     newline    db 10
-    unused_var db 0   ; <-- com -w+error esta linha impede a geração do .o
+    pad        resb 1 ; <-- zeroing: aviso sem flag; erro fatal com -w+error
 
 section .bss
     input1   resb 1

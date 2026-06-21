@@ -1,17 +1,21 @@
 ; file: flag_wall.asm
 ; FLAG DEMONSTRADA: -w+all
 ;
-; Habilita TODOS os avisos do NASM.
+; Habilita TODOS os avisos do NASM, incluindo os que estão DESLIGADOS por padrão.
 ; Modificação em relação a soma.asm:
-;   - Adicionada 'unused_var db 0' no .data (variável nunca lida/escrita).
+;   - Adicionada 'tiny_val dd __float32__(1.0e-40)': constante de ponto flutuante
+;     denormal (menor que o menor valor normalizado de 32 bits).
+;     O aviso 'float-denorm' está OFF por padrão — só aparece com -w+all.
 ;
-; Como compilar e ver o aviso:
-;   nasm -f elf32 flag_wall.asm -w+all
+; Como compilar — compare as duas execuções:
+;   nasm -f elf32 flag_wall.asm              <- sem avisos (float-denorm está off)
+;   nasm -f elf32 flag_wall.asm -w+all       <- exibe o aviso float-denorm
 ;
-; Saída esperada:
-;   flag_wall.asm:X: warning: symbol `unused_var' defined but not used [not-used]
+; Saída esperada com -w+all:
+;   flag_wall.asm:X: warning: denormal floating-point constant [-w+float-denorm]
 ;
-; Sem -w+all o NASM compila em silêncio; com ela, expõe o descuido.
+; Isso demonstra que -w+all vai além do padrão: ativa classes de aviso que o NASM
+; mantém silenciosas por default para não incomodar em casos comuns.
 
 section .data
     prompt1    db "Enter a number (0-9): "
@@ -25,7 +29,7 @@ section .data
     outmsg3    db ", the sum of these is "
     len_o3     equ $ - outmsg3
     newline    db 10
-    unused_var db 0   ; <-- variável declarada mas nunca utilizada no código
+    tiny_val   dd __float32__(1.0e-40) ; <-- constante denormal: só avisa com -w+all
 
 section .bss
     input1   resb 1

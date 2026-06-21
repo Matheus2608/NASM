@@ -3,14 +3,18 @@
 ;
 ; Silencia TODOS os avisos do NASM. Útil para código legado com muitos
 ; warnings inofensivos que poluem a saída do terminal.
-; Modificação em relação a soma.asm:
-;   - Adicionada 'unused_var db 0' (mesma causa de aviso do flag_wall.asm).
+; Modificações em relação a soma.asm:
+;   - 'pad resb 1' dentro do .data: reserva espaço não-inicializado numa seção
+;     inicializada → dispara 'zeroing' [ON por padrão].
+;   - 'tiny_val dd __float32__(1.0e-40)': constante denormal → dispara
+;     'float-denorm' [OFF por padrão, ativo com -w+all].
 ;
-; Como compilar — compare as duas execuções:
-;   nasm -f elf32 flag_wnoall.asm -w+all    <- mostra o aviso
-;   nasm -f elf32 flag_wnoall.asm -w-all    <- silêncio total, só erros fatais
+; Como compilar — compare as três execuções:
+;   nasm -f elf32 flag_wnoall.asm           <- mostra zeroing (padrão ligado)
+;   nasm -f elf32 flag_wnoall.asm -w+all    <- mostra zeroing + float-denorm
+;   nasm -f elf32 flag_wnoall.asm -w-all    <- silêncio total, nenhum aviso
 ;
-; Com -w-all o arquivo .o é gerado sem nenhuma mensagem, mesmo com unused_var.
+; Com -w-all o arquivo .o é gerado sem nenhuma mensagem, mesmo com avisos ativos.
 
 section .data
     prompt1    db "Enter a number (0-9): "
@@ -24,7 +28,8 @@ section .data
     outmsg3    db ", the sum of these is "
     len_o3     equ $ - outmsg3
     newline    db 10
-    unused_var db 0   ; <-- mesma variável não utilizada; com -w-all não gera aviso
+    pad        resb 1              ; <-- zeroing [ON]: .o gerado mas avisa; -w-all silencia
+    tiny_val   dd __float32__(1.0e-40) ; <-- float-denorm [OFF]: só aparece com -w+all
 
 section .bss
     input1   resb 1
