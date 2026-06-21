@@ -1,0 +1,177 @@
+; file: flag_keep_all.asm
+; FLAG DEMONSTRADA: --keep-all
+;
+; A flag '--keep-all' instrui o compilador NASM a reter e não apagar
+; arquivos de saída ou arquivos intermediários gerados durante o processo 
+; de montagem. O NASM costuma deletar o arquivo objeto (.o) caso encontre 
+; um erro fatal no meio da compilação, e essa flag impede essa exclusão.
+;
+; Modificação em relação a soma.asm:
+;   Nenhuma Modificação. O código abaixo contém o programa completo e funcional de soma.
+;   Como o nosso programa não possui erros, a compilação fluirá perfeitamente.
+;   O intuito aqui é demonstrar que o uso do --keep-all é seguro e não 
+;   quebra o processo de montagem de um arquivo correto.
+;
+; Como testar — execute o comando:
+;   nasm -f elf32 flag_keep_all.asm --keep-all
+;     -> A compilação ocorrerá com sucesso.
+;     -> Em seguida, use o comando 'ls' e veja que o arquivo final objeto
+;        (flag_keep_all.o) foi gerado e mantido na pasta com sucesso.
+
+section .data
+    prompt1 db "Enter a number (0-9): "
+    len_p1  equ $ - prompt1
+    prompt2 db "Enter another number (0-9): "
+    len_p2  equ $ - prompt2
+    outmsg1 db "You entered "
+    len_o1  equ $ - outmsg1
+    outmsg2 db " and "
+    len_o2  equ $ - outmsg2
+    outmsg3 db ", the sum of these is "
+    len_o3  equ $ - outmsg3
+    newline db 10
+
+section .bss
+    input1 resb 1
+    input2 resb 1
+    res_ten resb 1    ; Dezena do resultado
+    res_unit resb 1   ; Unidade do resultado
+    temp    resb 1    ; Para limpar o buffer
+
+section .text
+    global _start
+
+_start:
+    ; --- LER PRIMEIRO NÚMERO ---
+    ; Exibir Prompt 1
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, prompt1
+    mov edx, len_p1
+    int 0x80
+
+    ; Ler entrada
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, input1
+    mov edx, 1
+    int 0x80
+    call flush_stdin
+
+    ; --- LER SEGUNDO NÚMERO ---
+    ; Exibir Prompt 2
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, prompt2
+    mov edx, len_p2
+    int 0x80
+
+    ; Ler entrada
+    mov eax, 3
+    mov ebx, 0
+    mov ecx, input2
+    mov edx, 1
+    int 0x80
+    call flush_stdin
+
+    ; --- LÓGICA DA SOMA ---
+    mov al, [input1]
+    sub al, '0'
+    mov bl, [input2]
+    sub bl, '0'
+    add al, bl          
+
+    cmp al, 9
+    jbe menor_que_10
+    
+    ; Caso a soma seja > 9 (ex: 13)
+    mov ah, 0
+    mov bl, 10
+    div bl              ; AL = quociente (1), AH = resto (3)
+    add al, '0'         
+    mov [res_ten], al
+    add ah, '0'         
+    mov [res_unit], ah
+    jmp imprimir
+
+menor_que_10:
+    mov byte [res_ten], 0 
+    add al, '0'
+    mov [res_unit], al
+
+imprimir:
+    ; --- EXIBIÇÃO DO RESULTADO ---
+    ; "You entered "
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, outmsg1
+    mov edx, len_o1
+    int 0x80
+
+    ; Primeiro número
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, input1
+    mov edx, 1
+    int 0x80
+
+    ; " and "
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, outmsg2
+    mov edx, len_o2
+    int 0x80
+
+    ; Segundo número
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, input2
+    mov edx, 1
+    int 0x80
+
+    ; ", the sum of these is "
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, outmsg3
+    mov edx, len_o3
+    int 0x80
+
+    ; Imprime dezena se existir
+    cmp byte [res_ten], 0
+    je so_unidade
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, res_ten
+    mov edx, 1
+    int 0x80
+
+so_unidade:
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, res_unit
+    mov edx, 1
+    int 0x80
+
+    ; Pular linha
+    mov eax, 4
+    mov ebx, 1
+    mov ecx, newline
+    mov edx, 1
+    int 0x80
+
+    ; Sair do programa
+    mov eax, 1
+    xor ebx, ebx
+    int 0x80
+
+; --- FUNÇÃO PARA LIMPAR O BUFFER DO TECLADO ---
+flush_stdin:
+    .loop:
+        mov eax, 3
+        mov ebx, 0
+        mov ecx, temp
+        mov edx, 1
+        int 0x80
+        cmp byte [temp], 10 ; Verifica se é o Enter (ASCII 10)
+        jne .loop
+    ret
